@@ -1,0 +1,14 @@
+void main()
+{
+int j = 2;
+int motor, sensorValue = 0;
+if (motor == ON)
+{
+sensorValue++;
+}
+else if (motor == OFF)
+{
+sensorVlaue--;
+}
+return 0;
+}
