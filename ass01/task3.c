@@ -1,3 +1,15 @@
+/*
+              DATA DICTIONARY
+              COMP 451 Section X
+              Spring 2023
+              Assignment 1
+              Group Members: Muhammad Mustafa Kamal Malik
+                             Mahnoor
+              Roll Number:   241610047
+                             231450813
+              Date of Submission: April 02, 2023
+*/
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <ctype.h>
@@ -53,6 +65,7 @@ void lexemesMaker(const char *buffer)
 
     while (*fp != '$')
     {
+        // for different operators (++, <=, !=, etc.)
         if (*fp == '=' && *(fp + 1) == '=') {
             printf("Lexeme: ==\n");
             fp += 2;
@@ -86,12 +99,15 @@ void lexemesMaker(const char *buffer)
             fp += 2;
             bp += 2;
         }
-        else if (strchr("(){};=+-*/%%&|^<>!,", *fp) != NULL)
+        // if any other char is found (seperate lexeme)
+        else if (strchr("=+-*{};/%%^()<>!,&|", *fp) != NULL)
         {
             printf("Lexeme: %c\n", *fp);
             fp++;
             bp++;
         }
+        
+        // strings are to be considered as a single lexeme.
         else if (*fp == '\"')
         {
             fp++;
@@ -105,6 +121,8 @@ void lexemesMaker(const char *buffer)
                 fputc(*bp++, stdout);
             fputc('\n', stdout);
         }
+
+        // identifiers or keywords
         else if (isIDorKey(*fp))
         {
             while (isIDorKey(*(fp++)));
@@ -114,7 +132,7 @@ void lexemesMaker(const char *buffer)
                 fputc(*bp++, stdout);
             fputc('\n', stdout);
         }
-        
+        // other chars if any
         else
         {
             fp++;
@@ -122,6 +140,8 @@ void lexemesMaker(const char *buffer)
         }
     }
 }
+
+// function checking if a char is an identifier or a part of any keyword
 bool isIDorKey(char c)
 {
     return isalnum(c) || c == '_';

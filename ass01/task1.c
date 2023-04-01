@@ -54,7 +54,7 @@ int main(int argc, char *argv[]){
     fclose(fpIn);
     fclose(fpOut);
 
-
+// opening the file
     fpOut = fopen("out1.txt", "r");
     if (fpOut == NULL) {
         perror("Error creating output file");
@@ -62,6 +62,7 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
+// outputing the contents of the file
     printf("Output File contents:-\n");
     while (fgets(lineIn, 200, fpOut)) {
         fputs(lineIn, stdout);
@@ -69,10 +70,14 @@ int main(int argc, char *argv[]){
 
     fclose(fpOut);
 
+// memory de-allocation
+    free(lineIn);
+    free(lineOut);
 
     return 0;
 }
 
+// function to check if there is an empty line or not
 bool isEmptyLine(const char* line){
     for(int i = 0; line[i] != '\0'; i++){
         if (line[i] != ' ' && line[i] != '\n')
@@ -81,15 +86,14 @@ bool isEmptyLine(const char* line){
     return true;
 }
 
+// function to refine our program as per the instructions in the manual
 void refine(const char *input, char *output){
 
-    // for(int i = 0; in[i] != '\0'; i++){
-
-    // }
  bool inLineComment = false, Blockcomment = false, preprocessorDirective = false;
     int i = 0, j = 0;
 
     for (;input[i] != '\0';) {
+        // if block comment was found earlier, just keep ignoring till */ is found
         if (Blockcomment) {
             if (input[i] == '*' && input[i + 1] == '/') {
                 Blockcomment = false;
@@ -97,18 +101,23 @@ void refine(const char *input, char *output){
             } else {
                 i++;
             }
+        // if inline comment was found earlier, just ignore the whole line
         } else if (inLineComment) {
             if (input[i] == '\n') {
                 inLineComment = false;
             }
             i++;
-        }else if (preprocessorDirective) {
+        }
+        // if preprocessor directive was found earlier, just ignore the whole line
+        else if (preprocessorDirective) {
             if (input[i] == '\n') {
                 preprocessorDirective = false;
             }
             i++;
         } 
         else {
+
+            // checks for both comments and preprocessor directives
             if (input[i] == '/' && input[i + 1] == '*') {
                 Blockcomment = true;
                 i += 2;
@@ -119,11 +128,17 @@ void refine(const char *input, char *output){
                 preprocessorDirective = true;
                 i++;
             }
+
+            // check if there is a space before semicolon ;
             else {
                 if (input[i] == ';' && isspace((unsigned char)output[j - 1])) {
                     j--;
                 }
-
+            /* checks to put anything except for:
+            1. if space or newline isn't found within a line
+            2. if there are no two or more newlines consectively
+            3. if there are no more than one space within chars
+             */
                 if ((!isspace((unsigned char)input[i]) && input[i] != '\n') || 
                 (j > 0 && input[i] == '\n' && output[j - 1] != '\n') || 
                 (j > 0 && isspace((unsigned char)input[i]) && !isspace((unsigned char)output[j - 1]))) {
@@ -133,6 +148,7 @@ void refine(const char *input, char *output){
             }
         }
     }
+    // removing a single space before \n if there is any
     for(int i = 0; output[i]!= '\0';i++){
         if(output[i] == '\n' && isspace((unsigned char)output[i-1])){
             output[i-1] = '\n';
