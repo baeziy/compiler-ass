@@ -2,50 +2,127 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
-bool is_identifier_char(char c) {
-    return isalnum(c) || c == '_';
+bool isIDorKey(char);
+void lexemesMaker(const char *);
+
+int main(int argc, char *argv[])
+{
+    if (argc != 2)
+    {
+        perror("Invalid arguments\n");
+        exit(1);
+    }
+
+    FILE *fpIn;
+    fpIn = fopen(argv[1], "r");
+    if (fpIn == NULL)
+    {
+        perror("Can't open file");
+        exit(1);
+    }
+
+    char *buffer = (char *)malloc(20000);
+    
+
+    int i = 0;
+    while (true)
+    {
+        char c = fgetc(fpIn);
+
+        if (feof(fpIn))
+            break;
+
+        if (!(c == '\n'))
+        {
+            buffer[i++] = c;
+        }
+    }
+
+    fclose(fpIn);
+    lexemesMaker(buffer);
+
+
+    return 0;
 }
-
-void identify_lexemes(const char *buffer) {
+void lexemesMaker(const char *buffer)
+{
     const char *bp = buffer;
     const char *fp = buffer;
 
-    while (*fp != '$') {
-        if (is_identifier_char(*fp)) {
-            bp = fp;
-            while (is_identifier_char(*fp)) {
-                fp++;
-            }
-            printf("Lexeme: ");
-            for (const char *i = bp; i < fp; i++) {
-                putchar(*i);
-            }
-            putchar('\n');
-        } else if (*fp == '\"') {
-            bp = fp;
-            fp++;
-            while (*fp != '\"') {
-                fp++;
-            }
-            fp++; // To skip the ending double quote
-            printf("Lexeme: ");
-            for (const char *i = bp; i < fp; i++) {
-                putchar(*i);
-            }
-            putchar('\n');
-        } else if (strchr("(){};=+-*/%%&|^<>!,", *fp) != NULL) {
+    while (*fp != '$')
+    {
+        if (*fp == '=' && *(fp + 1) == '=') {
+            printf("Lexeme: ==\n");
+            fp += 2;
+            bp += 2;
+        } else if (*fp == '<' && *(fp + 1) == '=') {
+            printf("Lexeme: <=\n");
+            fp += 2;
+            bp += 2;
+        }else if (*fp == '+' && *(fp + 1) == '+') {
+            printf("Lexeme: ++\n");
+            fp += 2;
+            bp += 2;
+        }else if (*fp == '-' && *(fp + 1) == '-') {
+            printf("Lexeme: <=\n");
+            fp += 2;
+            bp += 2;
+        }else if (*fp == '>' && *(fp + 1) == '=') {
+            printf("Lexeme: >=\n");
+            fp += 2;
+            bp += 2;
+        } else if (*fp == '!' && *(fp + 1) == '=') {
+            printf("Lexeme: !=\n");
+            fp += 2;
+            bp += 2;
+        } else if (*fp == '&' && *(fp + 1) == '&') {
+            printf("Lexeme: &&\n");
+            fp += 2;
+            bp += 2;
+        } else if (*fp == '|' && *(fp + 1) == '|') {
+            printf("Lexeme: ||\n");
+            fp += 2;
+            bp += 2;
+        }
+        else if (strchr("(){};=+-*/%%&|^<>!,", *fp) != NULL)
+        {
             printf("Lexeme: %c\n", *fp);
             fp++;
-        } else {
+            bp++;
+        }
+        else if (*fp == '\"')
+        {
             fp++;
+            while (*fp != '\"')
+                fp++;
+            fp++;
+            bp++;
+
+            printf("Lexeme: ");
+            for (; bp < fp;)
+                fputc(*bp++, stdout);
+            fputc('\n', stdout);
+        }
+        else if (isIDorKey(*fp))
+        {
+            while (isIDorKey(*(fp++)));
+            fp--;
+            printf("Lexeme: ");
+            for (; bp < fp;)
+                fputc(*bp++, stdout);
+            fputc('\n', stdout);
+        }
+        
+        else
+        {
+            fp++;
+            bp++;
         }
     }
 }
-
-int main() {
-    const char *buffer = "void main(){printf(\"Hello Class\");}$";
-    
-    identify_lexemes(buffer);
-    return 0;
+bool isIDorKey(char c)
+{
+    return isalnum(c) || c == '_';
 }
