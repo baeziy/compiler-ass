@@ -2,7 +2,9 @@
 #include <stdbool.h>
 #include <stdlib.h> 
 #include <ctype.h>
-
+#include <string.h>
+#define MAX_MACROS 50
+#define MAX_MACRO_LEN 50
 void stripOffComments(char *input_filename, char *output_filename);
 void macroExpansion(char *input_filename, char *output_filename);
 void includeHeaderFiles(char *input_filename, char *output_filename);
@@ -19,20 +21,20 @@ int main(int argc, char *argv[]) {
 
     stripOffComments(input_file, "out1.c");
     macroExpansion("out1.c", "out2.c");
-    includeHeaderFiles("out2.c", "final.c");
+    // includeHeaderFiles("out2.c", "final.c");
 
-    FILE *final = fopen("final.c", "r");
-    if (final == NULL) {
-        perror("Error opening final.c");
-        return 1;
-    }
+    // FILE *final = fopen("final.c", "r");
+    // if (final == NULL) {
+    //     perror("Error opening final.c");
+    //     return 1;
+    // }
 
-    char eachLine[2000];
-    while (fgets(eachLine, sizeof(eachLine), final)) {
-        printf("%s", eachLine);
-    }
+    // char eachLine[2000];
+    // while (fgets(eachLine, sizeof(eachLine), final)) {
+    //     printf("%s", eachLine);
+    // }
 
-    fclose(final);
+    // fclose(final);
     return 0;
 }
 bool isEmptyLine(const char* line){
@@ -118,9 +120,63 @@ void stripOffComments(char *input_filename, char *output_filename){
     free(lineOut);
 }
 
+
+
 void macroExpansion(char *input_filename, char *output_filename) {
-    // Your implementation here
+    char line[200], macros[MAX_MACROS][MAX_MACRO_LEN], replacements[MAX_MACROS][MAX_MACRO_LEN];
+    int num_macros = 0;
+    FILE *input_file, *output_file;
+
+    // Open the input and output files
+    input_file = fopen(input_filename, "r");
+    output_file = fopen(output_filename, "w");
+
+    if (!input_file || !output_file) {
+        perror("Error opening file.");
+        return;
+    }
+
+    // Read each line of the input file
+    while (fgets(line, sizeof(line), input_file)) {
+        // Check if the line starts with "#define"
+        if (strncmp(line, "#define", 7) == 0) {
+            // Parse the macro and its replacement from the line
+            sscanf(line, "#define %s %s", macros[num_macros], replacements[num_macros]);
+            num_macros++;
+            continue;
+        }
+
+        // For each macro
+        for (int i = 0; i < num_macros; i++) {
+            char *macro_start;
+
+            // While there are occurrences of the macro in the line
+            while ((macro_start = strstr(line, macros[i]))) {
+                // Temporary string for constructing the new line
+                char temp[200] = "";
+
+                // Copy part of line before macro to temp
+                strncpy(temp, line, macro_start - line);
+                temp[macro_start - line] = '\0';
+
+                // Append replacement and part of line after macro
+                strcat(temp, replacements[i]);
+                strcat(temp, macro_start + strlen(macros[i]));
+
+                // Copy the temp string back to line
+                strcpy(line, temp);
+            }
+        }
+
+        // Write the line to the output file
+        fputs(line, output_file);
+    }
+
+    // Close the files
+    fclose(input_file);
+    fclose(output_file);
 }
+
 
 void includeHeaderFiles(char *input_filename, char *output_filename) {
     // Your implementation here
