@@ -1,20 +1,17 @@
-/*****in1.c*****/
-#include          <stdio.h>
-// defining macros 
-#define ON 1 
-#define OFF 0
-void main()
-{
-    /*declaring variables*/
-    int j = 2;
-    int motor, sensorValue = 0        ;
-    if (motor ==        ON)
-    {
-        sensorValue++;
-    }
-    else if (motor == OFF)
-    {
-        sensorValue--;
-    }
-    return 0;
-}
+/*Program Name: in1.c
+*Description:
+      Input file for assignment 1
+*/
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+//defining macros
+#define MESSAGE1 “Hello class\n”
+#define MESSAGE2 “Computer Science Department”
+void main() {
+
+
+      ///////////Print messages
+      printf(MESSAGE1);
+      printf(MESSAGE2);
+return 0; }

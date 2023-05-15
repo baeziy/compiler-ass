@@ -9,7 +9,7 @@ void stripOffComments(char *input_filename, char *output_filename);
 void macroExpansion(char *input_filename, char *output_filename);
 void includeHeaderFiles(char *input_filename, char *output_filename);
 bool isEmptyLine(const char*);
-void refine(const char*, char*);
+void refine(const char*, char*, bool*);
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -44,14 +44,14 @@ bool isEmptyLine(const char* line){
     }
     return true;
 }
-void refine(const char *input, char *output){
-    bool inLineComment = false, Blockcomment = false;
+void refine(const char *input, char *output, bool *block_comment){
+    bool inLineComment = false;
     int i = 0, j = 0;
 
     for (;input[i] != '\0';) {
-        if (Blockcomment) {
+        if (*block_comment) {
             if (input[i] == '*' && input[i + 1] == '/') {
-                Blockcomment = false;
+                *block_comment = false;
                 i += 2;
             } else {
                 i++;
@@ -63,33 +63,21 @@ void refine(const char *input, char *output){
             i++;
         } else {
             if (input[i] == '/' && input[i + 1] == '*') {
-                Blockcomment = true;
+                *block_comment = true;
                 i += 2;
             } else if (input[i] == '/' && input[i + 1] == '/') {
                 inLineComment = true;
                 i += 2;
             } else {
-                if (input[i] == ';' && isspace((unsigned char)output[j - 1])) {
-                    j--;
-                }
-                if ((!isspace((unsigned char)input[i]) && input[i] != '\n') || 
-                (j > 0 && input[i] == '\n' && output[j - 1] != '\n') || 
-                (j > 0 && isspace((unsigned char)input[i]) && !isspace((unsigned char)output[j - 1]))) {
-                    output[j++] = input[i];
-                }
+                output[j++] = input[i];
                 i++;
             }
         }
     }
 
-    for(int i = 0; output[i]!= '\0';i++){
-        if(output[i] == '\n' && isspace((unsigned char)output[i-1])){
-            output[i-1] = '\n';
-            output[i] = '\0';
-        }
-    }
     output[j] = '\0';
 }
+
 
 void stripOffComments(char *input_filename, char *output_filename){
     FILE *fpIn;
@@ -106,10 +94,11 @@ void stripOffComments(char *input_filename, char *output_filename){
     }
     char* lineIn = (char*) malloc(200);
     char* lineOut = (char*) malloc(200);
+    bool block_comment = false;
 
     while(fgets(lineIn, 200, fpIn)){
-        if(!isEmptyLine(lineIn)){
-            refine(lineIn, lineOut);
+        refine(lineIn, lineOut, &block_comment);
+        if(!isEmptyLine(lineOut)){
             fputs(lineOut, fpOut);
         }
     }
@@ -119,6 +108,7 @@ void stripOffComments(char *input_filename, char *output_filename){
     free(lineIn);
     free(lineOut);
 }
+
 
 
 
@@ -179,5 +169,60 @@ void macroExpansion(char *input_filename, char *output_filename) {
 
 
 void includeHeaderFiles(char *input_filename, char *output_filename) {
-    // Your implementation here
+    FILE *input_file, *output_file;
+    char line[200];
+
+    // Open the input and output files
+    input_file = fopen(input_filename, "r");
+    output_file = fopen(output_filename, "w");
+
+    if (!input_file || !output_file) {
+        perror("Error opening file.");
+        return;
+    }
+
+    // Read each line of the input file
+    while (fgets(line, sizeof(line), input_file)) {
+        // Check if the line is an include statement
+        if (strncmp(line, "#include", 8) == 0) {
+            char header_filename[50];
+            FILE *header_file;
+            char header_line[200];
+
+            // Parse the header filename from the include statement
+            sscanf(line, "#include <%[^>]> ", header_filename);
+
+            // Map the standard names to the custom names
+            if (strcmp(header_filename, "stdio.h") == 0) {
+                strcpy(header_filename, "pa2_stdio.h");
+            } else if (strcmp(header_filename, "stdlib.h") == 0) {
+                strcpy(header_filename, "pa2_stdlib.h");
+            } else if (strcmp(header_filename, "string.h") == 0) {
+                strcpy(header_filename, "pa2_string.h");
+            }
+
+            // Open the header file
+            header_file = fopen(header_filename, "r");
+
+            if (!header_file) {
+                perror("Error opening header file.");
+                continue;
+            }
+
+            // Read each line of the header file and write it to the output file
+            while (fgets(header_line, sizeof(header_line), header_file)) {
+                fputs(header_line, output_file);
+            }
+
+            // Close the header file
+            fclose(header_file);
+        } else {
+            // Write the line to the output file
+            fputs(line, output_file);
+        }
+    }
+
+    // Close the files
+    fclose(input_file);
+    fclose(output_file);
 }
