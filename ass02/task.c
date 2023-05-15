@@ -1,3 +1,15 @@
+/*
+              DATA DICTIONARY
+              COMP 451 Section X
+              Spring 2023
+              Assignment 1
+              Group Members: Muhammad Mustafa Kamal Malik
+                             Mahnoor
+              Roll Number:   241610047
+                             231450813
+*/
+
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h> 
