@@ -2,6 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 void main() {
-      printf(“Hello);
-      printf(“Computer);
+printf("Hello class\n");
+printf("Computer Science Department");
 return 0; }

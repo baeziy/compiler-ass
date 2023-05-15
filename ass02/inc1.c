@@ -6,8 +6,8 @@
 #include <string.h>
 #include <stdlib.h>
 //defining macros
-#define MESSAGE1 “Hello class\n”
-#define MESSAGE2 “Computer Science Department”
+#define       MESSAGE1       "Hello class\n"
+#define MESSAGE2 "Computer Science Department"
 void main() {
 
 

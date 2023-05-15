@@ -21,20 +21,20 @@ int main(int argc, char *argv[]) {
 
     stripOffComments(input_file, "out1.c");
     macroExpansion("out1.c", "out2.c");
-    // includeHeaderFiles("out2.c", "final.c");
+    includeHeaderFiles("out2.c", "final.c");
 
-    // FILE *final = fopen("final.c", "r");
-    // if (final == NULL) {
-    //     perror("Error opening final.c");
-    //     return 1;
-    // }
+    FILE *final = fopen("final.c", "r");
+    if (final == NULL) {
+        perror("Error opening final.c");
+        return 1;
+    }
 
-    // char eachLine[2000];
-    // while (fgets(eachLine, sizeof(eachLine), final)) {
-    //     printf("%s", eachLine);
-    // }
+    char eachLine[2000];
+    while (fgets(eachLine, sizeof(eachLine), final)) {
+        printf("%s", eachLine);
+    }
 
-    // fclose(final);
+    fclose(final);
     return 0;
 }
 bool isEmptyLine(const char* line){
@@ -79,10 +79,10 @@ void refine(const char *input, char *output, bool *block_comment){
 }
 
 
-void stripOffComments(char *input_filename, char *output_filename){
+void stripOffComments(char *input_filename, char *output_filename) {
     FILE *fpIn;
-    fpIn = fopen(input_filename,"r");
-    if (fpIn == NULL){
+    fpIn = fopen(input_filename, "r");
+    if (fpIn == NULL) {
         perror("Can't open file");
         exit(1);
     }
@@ -92,14 +92,36 @@ void stripOffComments(char *input_filename, char *output_filename){
         fclose(fpIn);
         exit(1);
     }
-    char* lineIn = (char*) malloc(200);
-    char* lineOut = (char*) malloc(200);
+    char *lineIn = (char*) malloc(200);
+    char *lineOut = (char*) malloc(200);
     bool block_comment = false;
 
-    while(fgets(lineIn, 200, fpIn)){
+    while (fgets(lineIn, 200, fpIn)) {
         refine(lineIn, lineOut, &block_comment);
-        if(!isEmptyLine(lineOut)){
-            fputs(lineOut, fpOut);
+        if (!isEmptyLine(lineOut)) {
+            // Remove starting spaces
+            int i = 0;
+            while (isspace(lineOut[i]))
+                i++;
+            
+            // Remove extra spaces between "#define" and macro/replacement
+            char refinedLine[200];
+            int refinedIndex = 0;
+            bool isSpaceEncountered = false;
+            for (int j = i; lineOut[j] != '\0'; j++) {
+                if (isspace(lineOut[j])) {
+                    if (!isSpaceEncountered) {
+                        refinedLine[refinedIndex++] = lineOut[j];
+                        isSpaceEncountered = true;
+                    }
+                } else {
+                    refinedLine[refinedIndex++] = lineOut[j];
+                    isSpaceEncountered = false;
+                }
+            }
+            refinedLine[refinedIndex] = '\0';
+
+            fputs(refinedLine, fpOut);
         }
     }
 
@@ -108,9 +130,6 @@ void stripOffComments(char *input_filename, char *output_filename){
     free(lineIn);
     free(lineOut);
 }
-
-
-
 
 void macroExpansion(char *input_filename, char *output_filename) {
     char line[200], macros[MAX_MACROS][MAX_MACRO_LEN], replacements[MAX_MACROS][MAX_MACRO_LEN];
@@ -131,12 +150,12 @@ void macroExpansion(char *input_filename, char *output_filename) {
         // Check if the line starts with "#define"
         if (strncmp(line, "#define", 7) == 0) {
             // Parse the macro and its replacement from the line
-            sscanf(line, "#define %s %s", macros[num_macros], replacements[num_macros]);
+            sscanf(line + 7, "%s %[^\n]", macros[num_macros], replacements[num_macros]);
             num_macros++;
             continue;
         }
 
-        // For each macro
+        // Replace macros with their replacements
         for (int i = 0; i < num_macros; i++) {
             char *macro_start;
 
@@ -166,6 +185,7 @@ void macroExpansion(char *input_filename, char *output_filename) {
     fclose(input_file);
     fclose(output_file);
 }
+
 
 
 void includeHeaderFiles(char *input_filename, char *output_filename) {
